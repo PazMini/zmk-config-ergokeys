@@ -1,0 +1,44 @@
+
+stages:
+  - build
+
+variables:
+  WEST_WORK_DIR: "$CI_PROJECT_DIR/zmk"
+
+before_script:
+  # Install dependencies
+  - apk add --no-cache python3 py3-pip git cmake ninja bash g++ gcc make
+  - pip3 install west
+
+  # Clone ZMK and initialize workspace
+  - git clone https://github.com/zmkfirmware/zmk.git $WEST_WORK_DIR
+  - cd $WEST_WORK_DIR
+  - west init -l app
+  - west update
+
+build_left:
+  stage: build
+  script:
+    - cd $WEST_WORK_DIR/app
+    - west build -b nice_nano -- -DSHIELD=ergokeys_left -DZMK_CONFIG=$CI_PROJECT_DIR
+  artifacts:
+    paths:
+      - $WEST_WORK_DIR/app/build/zephyr/*.uf2
+      - $WEST_WORK_DIR/app/build/zephyr/*.hex
+      - $WEST_WORK_DIR/app/build/zephyr/*.bin
+    expire_in: 1 week
+  tags: []
+
+build_right:
+  stage: build
+  script:
+    - cd $WEST_WORK_DIR/app
+    - rm -rf build
+    - west build -b nice_nano -- -DSHIELD=ergokeys_right -DZMK_CONFIG=$CI_PROJECT_DIR
+  artifacts:
+    paths:
+      - $WEST_WORK_DIR/app/build/zephyr/*.uf2
+      - $WEST_WORK_DIR/app/build/zephyr/*.hex
+      - $WEST_WORK_DIR/app/build/zephyr/*.bin
+    expire_in: 1 week
+  tags: []
